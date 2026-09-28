@@ -6,7 +6,7 @@
 
     <EditForm class="event-card__body" Model="_draft" OnValidSubmit="SaveChanges">
         <DataAnnotationsValidator />
-        <div class="event-card__index">EVENT 0@Event.Id <span>·</span> EDIT DETAILS</div>
+        <div class="event-card__index">EVENT @Event.Id.ToString("00") <span>·</span> EDIT DETAILS</div>
         <div class="event-fields">
             <label for="event-name-@Event.Id">
                 EVENT NAME
