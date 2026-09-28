@@ -1,0 +1,117 @@
+@page "/events/{Id:int}/register"
+@inject EventCatalog Catalog
+@inject UserSessionService Session
+
+<PageTitle>Register | EventEase</PageTitle>
+
+<a class="back-link" href="/events">&larr; All events</a>
+
+@if (Event is { } eventItem)
+{
+    <section class="registration-layout">
+        <div class="registration-copy">
+            <p class="eyebrow"><span class="eyebrow-rule"></span> SAVE YOUR SEAT</p>
+            <h1>Join us for<br /><span>@eventItem.Name</span></h1>
+            <p>@(eventItem.Date?.ToString("MMMM d, yyyy") ?? "Date pending") <span>·</span> @eventItem.Location</p>
+            <a class="back-link" href="/events/@eventItem.Id">View event details</a>
+        </div>
+
+        <div class="registration-panel">
+            @if (!_sessionReady)
+            {
+                <p role="status">Restoring your registration session...</p>
+            }
+            else if (Session.HasRegistration(eventItem.Id))
+            {
+                <div class="success-message" role="status">
+                    <h2>You're on the list, @Session.AttendeeName.</h2>
+                    <p>We've saved your registration for @eventItem.Name.</p>
+                </div>
+                @if (!Session.IsPersistenceAvailable)
+                {
+                    <p class="form-notice">Your browser session storage is unavailable. This registration will last only until you leave this page.</p>
+                }
+                <a class="button-link" href="/attendance">View attendance tracker</a>
+            }
+            else if (!_registrationComplete)
+            {
+                <h2>Registration</h2>
+                <p>Tell us who to expect.</p>
+                @if (!string.IsNullOrWhiteSpace(_formError))
+                {
+                    <p class="form-error" role="alert">@_formError</p>
+                }
+                <EditForm class="registration-form" Model="_form" OnValidSubmit="SubmitRegistration">
+                    <DataAnnotationsValidator />
+                    <label for="attendee-name">
+                        YOUR NAME
+                        <InputText id="attendee-name" autocomplete="name" @bind-Value="_form.Name" />
+                        <ValidationMessage For="@(() => _form.Name)" />
+                    </label>
+                    <label for="attendee-email">
+                        EMAIL ADDRESS
+                        <InputText id="attendee-email" type="email" autocomplete="email" @bind-Value="_form.Email" />
+                        <ValidationMessage For="@(() => _form.Email)" />
+                    </label>
+                    <ValidationSummary />
+                    <button class="button-link button-link--primary" type="submit">Confirm registration</button>
+                </EditForm>
+                @if (!Session.IsPersistenceAvailable)
+                {
+                    <p class="form-notice">Browser session storage is unavailable. Your registration will be temporary.</p>
+                }
+            }
+            else
+            {
+                <div class="success-message" role="status">
+                    <h2>Registration confirmed.</h2>
+                    <p>You're registered for @eventItem.Name.</p>
+                </div>
+                <a class="button-link" href="/attendance">View attendance tracker</a>
+            }
+        </div>
+    </section>
+}
+else
+{
+    <section class="registration-panel">
+        <h1 class="page-title">Event not found</h1>
+        <p>Browse the current event list to find an event to register for.</p>
+        <a class="button-link button-link--primary" href="/events">Browse events</a>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private RegistrationFormModel _form = new();
+    private bool _sessionReady;
+    private bool _registrationComplete;
+    private string? _formError;
+    private EventItem? Event => Catalog.Find(Id);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        await Session.InitializeAsync();
+        _form.Name = Session.AttendeeName ?? string.Empty;
+        _form.Email = Session.AttendeeEmail ?? string.Empty;
+        _sessionReady = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SubmitRegistration()
+    {
+        _formError = null;
+        _registrationComplete = await Session.RegisterAsync(Id, _form);
+        if (!_registrationComplete)
+        {
+            _formError = "We couldn't save this registration. Check your details and try again.";
+        }
+    }
+}

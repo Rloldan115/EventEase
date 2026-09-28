@@ -1,0 +1,50 @@
+@page "/events/{Id:int}"
+@inject EventCatalog Catalog
+
+<PageTitle>@(Event?.Name ?? "Event not found") | EventEase</PageTitle>
+
+<a class="back-link" href="/events">&larr; All events</a>
+
+@if (Event is { } eventItem)
+{
+    <section class="detail-layout">
+        <div>
+            <img class="detail-image" src="@eventItem.ImageUrl" alt="@eventItem.Name" />
+            <div class="detail-facts">
+                <div class="detail-fact">
+                    <span>DATE</span>
+                    <strong>@(eventItem.Date?.ToString("dddd, MMMM d, yyyy") ?? "Date pending")</strong>
+                </div>
+                <div class="detail-fact">
+                    <span>LOCATION</span>
+                    <strong>@eventItem.Location</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-copy">
+            <p class="eyebrow"><span class="eyebrow-rule"></span> @eventItem.Category</p>
+            <h1>@eventItem.Name</h1>
+            <p>@eventItem.Description</p>
+            <div class="detail-actions">
+                <a class="button-link button-link--primary" href="/events/@eventItem.Id/register">Register for this event</a>
+                <a class="button-link" href="/events">Browse events</a>
+            </div>
+        </div>
+    </section>
+}
+else
+{
+    <section class="registration-panel">
+        <h1 class="page-title">Event not found</h1>
+        <p>That event may have moved. Browse the current event list instead.</p>
+        <a class="button-link button-link--primary" href="/events">Browse events</a>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private EventItem? Event => Catalog.Find(Id);
+}

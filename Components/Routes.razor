@@ -1,0 +1,16 @@
+﻿<Router AppAssembly="typeof(Program).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <PageTitle>Page not found | EventEase</PageTitle>
+        <LayoutView Layout="typeof(Layout.MainLayout)">
+            <section class="registration-panel">
+                <h1 class="page-title">This page isn't on the guest list.</h1>
+                <p>Check the address or head back to the event list.</p>
+                <a class="button-link button-link--primary" href="/events">Browse events</a>
+            </section>
+        </LayoutView>
+    </NotFound>
+</Router>

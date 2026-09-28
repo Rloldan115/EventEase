@@ -1,0 +1,61 @@
+<article class="event-card">
+    <div class="event-card__image-wrap">
+        <img class="event-card__image" src="@Event.ImageUrl" alt="@Event.Name" />
+        <span class="event-card__category">@Event.Category</span>
+    </div>
+
+    <EditForm class="event-card__body" Model="_draft" OnValidSubmit="SaveChanges">
+        <DataAnnotationsValidator />
+        <div class="event-card__index">EVENT 0@Event.Id <span>·</span> EDIT DETAILS</div>
+        <div class="event-fields">
+            <label for="event-name-@Event.Id">
+                EVENT NAME
+                <InputText id="@($"event-name-{Event.Id}")" @bind-Value="_draft.Name" />
+                <ValidationMessage For="@(() => _draft.Name)" />
+            </label>
+            <label for="event-date-@Event.Id">
+                DATE
+                <InputDate id="@($"event-date-{Event.Id}")" @bind-Value="_draft.Date" />
+                <ValidationMessage For="@(() => _draft.Date)" />
+            </label>
+            <label for="event-location-@Event.Id">
+                LOCATION
+                <InputText id="@($"event-location-{Event.Id}")" @bind-Value="_draft.Location" />
+                <ValidationMessage For="@(() => _draft.Location)" />
+            </label>
+        </div>
+        <ValidationSummary />
+
+        <p class="event-card__description">@Event.Description</p>
+
+        <div class="event-card__actions">
+            <button class="button-link button-link--primary" type="submit">Save valid details</button>
+            <a class="button-link" href="/events/@Event.Id">View details</a>
+            <a class="button-link" href="/events/@Event.Id/register">Register</a>
+        </div>
+    </EditForm>
+</article>
+
+@code {
+    [Parameter, EditorRequired]
+    public EventItem Event { get; set; } = default!;
+
+    private EventEditModel _draft = new();
+    private int _draftEventId;
+
+    protected override void OnParametersSet()
+    {
+        if (_draftEventId != Event.Id)
+        {
+            _draft = EventEditModel.From(Event);
+            _draftEventId = Event.Id;
+        }
+    }
+
+    private void SaveChanges()
+    {
+        Event.Name = _draft.Name.Trim();
+        Event.Date = _draft.Date!.Value.Date;
+        Event.Location = _draft.Location.Trim();
+    }
+}

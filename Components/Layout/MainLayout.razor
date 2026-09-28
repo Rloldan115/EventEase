@@ -1,0 +1,27 @@
+﻿@inherits LayoutComponentBase
+
+<div class="app-frame">
+    <header class="app-header">
+        <a class="brand" href="/" aria-label="EventEase home">
+            <span class="brand-mark">E</span>
+            <span>EventEase</span>
+        </a>
+        <NavMenu />
+        <div class="header-context"><span class="status-dot"></span> EVENT STUDIO</div>
+    </header>
+
+    <main class="site-main">
+        @Body
+    </main>
+
+    <footer class="site-footer">
+        <span>EVENTEASE</span>
+        <span>Thoughtful gatherings, made simple.</span>
+    </footer>
+</div>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">Dismiss</a>
+</div>

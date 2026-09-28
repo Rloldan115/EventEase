@@ -1,0 +1,56 @@
+﻿@page "/"
+@page "/events"
+@inject EventCatalog Catalog
+
+<PageTitle>Events | EventEase</PageTitle>
+
+<section class="events-page">
+	<div class="page-heading">
+		<p class="eyebrow"><span class="eyebrow-rule"></span> CURATED GATHERINGS</p>
+		<div class="heading-row">
+			<div>
+				<h1>Make room for<br /><span>what's next.</span></h1>
+				<p class="page-intro">Find your next reason to bring people together.</p>
+			</div>
+			<div class="event-count" aria-label="Upcoming events">
+				<strong>@Catalog.Events.Count.ToString("00")</strong>
+				<span>UPCOMING<br />EVENTS</span>
+			</div>
+		</div>
+	</div>
+
+	<section id="event-list" class="events-grid" aria-label="Upcoming events">
+		@foreach (var eventItem in VisibleEvents)
+		{
+			<EventCard Event="eventItem" />
+		}
+	</section>
+
+	@if (Catalog.Events.Count == 0)
+	{
+		<p class="empty-state">No events are scheduled yet.</p>
+	}
+	else if (PageCount > 1)
+	{
+		<nav class="pagination" aria-label="Event list pages">
+			<span>Showing @FirstVisibleEvent&ndash;@LastVisibleEvent of @Catalog.Events.Count events</span>
+			<div class="pagination__controls">
+				<button class="button-link" type="button" @onclick="PreviousPage" disabled="@(CurrentPage == 1)">&larr; Previous</button>
+				<span>Page @CurrentPage of @PageCount</span>
+				<button class="button-link" type="button" @onclick="NextPage" disabled="@(CurrentPage == PageCount)">Next &rarr;</button>
+			</div>
+		</nav>
+	}
+</section>
+
+@code {
+	private const int PageSize = 6;
+	private int CurrentPage { get; set; } = 1;
+	private int PageCount => Math.Max(1, (Catalog.Events.Count + PageSize - 1) / PageSize);
+	private int FirstVisibleEvent => Catalog.Events.Count == 0 ? 0 : (CurrentPage - 1) * PageSize + 1;
+	private int LastVisibleEvent => Math.Min(CurrentPage * PageSize, Catalog.Events.Count);
+	private IReadOnlyList<EventItem> VisibleEvents => Catalog.GetPage(CurrentPage, PageSize);
+
+	private void PreviousPage() => CurrentPage = Math.Max(1, CurrentPage - 1);
+	private void NextPage() => CurrentPage = Math.Min(PageCount, CurrentPage + 1);
+}

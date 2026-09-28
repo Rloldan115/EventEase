@@ -1,0 +1,87 @@
+@page "/attendance"
+@inject EventCatalog Catalog
+@inject UserSessionService Session
+
+<PageTitle>Attendance | EventEase</PageTitle>
+
+<section class="attendance-page">
+    <p class="eyebrow"><span class="eyebrow-rule"></span> YOUR EVENT SESSION</p>
+    <div class="heading-row">
+        <div>
+            <h1>Showed up.<br /><span>Counted.</span></h1>
+            <p class="page-intro">Track the events you're registered for and mark the ones you've attended.</p>
+        </div>
+        @if (_sessionReady)
+        {
+            <div class="event-count" aria-label="Attendance summary">
+                <strong>@Session.AttendedCount/@Session.RegisteredCount</strong>
+                <span>ATTENDED<br />EVENTS</span>
+            </div>
+        }
+    </div>
+
+    @if (!_sessionReady)
+    {
+        <p class="empty-state" role="status">Restoring your session...</p>
+    }
+    else if (RegisteredEvents.Count == 0)
+    {
+        <div class="empty-state">
+            <p>No registrations in this browser session yet.</p>
+            <a class="button-link button-link--primary" href="/events">Browse events</a>
+        </div>
+    }
+    else
+    {
+        @if (!Session.IsPersistenceAvailable)
+        {
+            <p class="form-notice">Session storage is unavailable. Attendance changes will be temporary.</p>
+        }
+        <div class="attendance-list">
+            @foreach (var eventItem in RegisteredEvents)
+            {
+                var attended = Session.HasAttended(eventItem.Id);
+                <article class="attendance-row">
+                    <div class="attendance-row__date">
+                        <strong>@eventItem.Date?.ToString("dd")</strong>
+                        <span>@eventItem.Date?.ToString("MMM")</span>
+                    </div>
+                    <div class="attendance-row__details">
+                        <span class="eyebrow">@eventItem.Category</span>
+                        <h2>@eventItem.Name</h2>
+                        <p>@eventItem.Location</p>
+                    </div>
+                    <div class="attendance-row__status">
+                        <span class="attendance-badge @(attended ? "is-attended" : "")">
+                            @(attended ? "ATTENDED" : "REGISTERED")
+                        </span>
+                        <button class="button-link @(attended ? "" : "button-link--primary")" type="button" @onclick="() => ToggleAttendance(eventItem.Id, !attended)">
+                            @(attended ? "Undo attendance" : "Mark attended")
+                        </button>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    private bool _sessionReady;
+    private IReadOnlyList<EventItem> RegisteredEvents =>
+        Catalog.Events.Where(eventItem => Session.HasRegistration(eventItem.Id)).ToList();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        await Session.InitializeAsync();
+        _sessionReady = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ToggleAttendance(int eventId, bool attended) =>
+        await Session.SetAttendanceAsync(eventId, attended);
+}
